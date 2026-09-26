@@ -1,1 +1,2 @@
-package bikr.pattern; public class LicenseCategoryObserver { }
+package bikr.pattern;
+public class LicenseCategoryObserver { }

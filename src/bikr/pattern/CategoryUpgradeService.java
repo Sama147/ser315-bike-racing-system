@@ -1,1 +1,2 @@
-package bikr.pattern; public class CategoryUpgradeService { }
+package bikr.pattern;
+public class CategoryUpgradeService { }

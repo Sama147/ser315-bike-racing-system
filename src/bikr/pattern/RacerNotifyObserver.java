@@ -1,1 +1,2 @@
-package bikr.pattern; public class RacerNotifyObserver { }
+package bikr.pattern;
+public class RacerNotifyObserver { }

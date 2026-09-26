@@ -1,1 +1,5 @@
-package bikr.model.enums; public enum RequestStatus { }
+package bikr.model.enums;
+public enum RequestStatus {
+    PENDING, APPROVED, DENIED
+
+}

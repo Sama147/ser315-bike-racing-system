@@ -1,5 +1,4 @@
 package bikr.pattern;
-
 import bikr.model.Racer;
 import bikr.model.enums.CategoryLevel;
 
