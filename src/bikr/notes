@@ -442,3 +442,158 @@
   Symptom:  Racer doesn't get promoted after 5 podiums
   Fix:      ResultEntry.podiumCounted was false.
             Check that finishing position is 1-3.
+
+====================================================================
+  9. MERGE WORKFLOW
+====================================================================
+  Roger goes to GitHub:
+
+    1. Same repo page
+    2. Their branch (e.g. feature/controllers) will show the banner
+       -> Compare & pull request
+    3. Base: main   <-   Compare: their branch
+    4. Title: feat: add views and controllers
+    5. Create pull request
+
+  Likely outcome — GitHub will either say:
+
+    "Able to merge"           -> click Merge pull request  [OK]
+    "Can't automatically merge" -> there's a conflict.
+                                   See STEP 2B below.
+
+
+--------------------------------------------------------------------
+  STEP 2B — IF THERE IS A CONFLICT
+--------------------------------------------------------------------
+
+  This is almost certainly on Main.java if both branches touched it
+  (Sama's skeleton still has print "Bikr starting...").
+
+   Roger does this locally:
+
+      git checkout their-branch
+      git fetch origin
+      git rebase origin/main
+
+  If a conflict on Main.java shows up:
+
+    1. Open the file
+    2. Pick which version to keep — since it's just a skeleton
+       right now, either version is fine (they will rewrite it
+       in Step 4 anyway)
+    3. Save the file
+    4. Run:
+
+         git add Main.java
+         git rebase --continue
+         git push --force-with-lease
+
+  Then refresh the GitHub PR page — it will now show
+  "Able to merge". Merge it.
+
+  If there is a conflict on anything else, that means someone
+  edited a file they should not have. Check with each other before
+  resolving.
+
+
+--------------------------------------------------------------------
+  STEP 3 — NOW MAIN HAS EVERYTHING
+--------------------------------------------------------------------
+
+  Both main and both branches contain:
+
+    src/bikr/model/       - all classes + enums (Sama)
+    src/bikr/repository/  - all 6 repos (Sama)
+    src/bikr/pattern/     - Builder + Observer (Sama)
+    src/bikr/config/      - DatabaseConfig (Sama)
+    src/bikr/view/        - all views ( Roger)
+    src/bikr/controller/  - all controllers ( Roger)
+    sql/                  - schema + seed (Sama)
+    lib/                  - SQLite jar
+    Main.java             - still the skeleton
+
+
+--------------------------------------------------------------------
+  STEP 4 —  Roger PULLS MAIN AND FINISHES MAIN.JAVA
+--------------------------------------------------------------------
+
+  This is the key step.  Roger needs to work off main (which now
+  has everything), NOT their old branch.
+
+   Roger, locally:
+
+      git checkout main
+      git pull
+      git checkout -b feature/main-walkthrough
+
+  Now they are on a fresh branch that has all of Sama's code
+  + all of their own code. They can now:
+
+    1. Open src/bikr/Main.java
+    2. Write the CLI walkthrough (use NOTES_PERSON_B.txt section 5
+       as reference)
+    3. Use their controllers, and call Sama's repositories
+       through them
+    4. Compile: Ctrl+F9 in IntelliJ
+    5. Run and test the walkthrough
+
+  Sample start of what they will write in Main.java:
+
+      package bikr;
+
+      import bikr.pattern.*;
+      import bikr.repository.*;
+      import bikr.controller.*;
+      import bikr.view.*;
+
+      import java.util.Scanner;
+
+      public class Main {
+          public static void main(String[] args) {
+              UserRepository userRepo = new UserRepository();
+              RaceRepository raceRepo = new RaceRepository();
+              RegistrationRepository regRepo = new RegistrationRepository();
+              AccessRequestRepository reqRepo = new AccessRequestRepository();
+              RaceResultRepository resultRepo = new RaceResultRepository();
+              LicenseRepository licenseRepo = new LicenseRepository();
+
+              CategoryUpgradeService upgradeService =
+                      new CategoryUpgradeService(userRepo);
+              upgradeService.attach(new RacerNotifyObserver());
+              upgradeService.attach(new LicenseCategoryObserver(licenseRepo));
+
+              // ... controllers, views, menu loop
+          }
+      }
+
+  Every repository and pattern class they need is already in place.
+  They just wire them together.
+
+
+--------------------------------------------------------------------
+  STEP 5 —  Roger PUSHES AND PRS THE FINAL MAIN.JAVA
+--------------------------------------------------------------------
+
+      git add .
+      git commit -m "feat(main): implement CLI walkthrough"
+      git push -u origin feature/main-walkthrough
+
+  On GitHub: open a PR, base main <- compare feature/main-walkthrough,
+  merge.
+
+
+--------------------------------------------------------------------
+  STEP 6 — tell Sama everything is on the main repo so she can make a pr
+--------------------------------------------------------------------
+  If  Roger's controllers do not compile because they need a new
+  method on a repository:
+
+    NO  - Do not add the method yourself
+    YES - Ask Sama, who adds it on their branch, pushes, and
+           Roger pulls
+
+  Same in reverse. This is what kaeeps both branches mergeable.
+  The whole plan falls apart if either of you starts editing the
+  other's directories.
+
+  final step : delete this notes file for the submission
