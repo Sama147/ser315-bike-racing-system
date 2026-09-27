@@ -6,16 +6,22 @@ public class RacerSignUpView {
 
     public String[] enterPersonalInfo(Scanner scanner) {
         System.out.println("\n=== Racer Sign Up ===");
-        System.out.print("Enter Name: ");
-        String name = scanner.nextLine().trim();
+        System.out.print("Enter First Name: ");
+        String firstName = scanner.nextLine().trim();
+
+        System.out.print("Enter Last Name: ");
+        String lastName = scanner.nextLine().trim();
 
         System.out.print("Enter Email: ");
         String email = scanner.nextLine().trim();
 
+        System.out.print("Enter SSN: ");
+        String ssn = scanner.nextLine().trim();
+
         System.out.print("Enter Password: ");
         String password = scanner.nextLine().trim();
 
-        return new String[]{name, email, password};
+        return new String[]{firstName, lastName, email, ssn, password};
     }
 
     public void enterCardInfo(Scanner scanner) {

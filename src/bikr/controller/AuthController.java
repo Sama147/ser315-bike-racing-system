@@ -4,7 +4,15 @@ import bikr.view.SignInView;
 import bikr.view.RacerSignUpView;
 import bikr.view.OrganizerSignUpView;
 import bikr.view.MainPageView;
-
+import bikr.model.Racer;
+import bikr.model.Organizer;
+import bikr.model.License;
+import bikr.model.AccessRequest;
+import bikr.model.User;
+import bikr.repository.UserRepository;
+import bikr.repository.LicenseRepository;
+import bikr.repository.AccessRequestRepository;
+import java.time.LocalDate;
 import java.util.Scanner;
 
 public class AuthController {
@@ -14,16 +22,22 @@ public class AuthController {
     private final OrganizerSignUpView organizerSignUpView;
     private final MainPageView mainPageView;
 
-    public AuthController() {
+    private final UserRepository userRepository;
+    private final LicenseRepository licenseRepository;
+    private final AccessRequestRepository accessRequestRepository;
+
+    public AuthController(UserRepository userRepository, LicenseRepository licenseRepository,
+                           AccessRequestRepository accessRequestRepository) {
         this.signInView = new SignInView();
         this.racerSignUpView = new RacerSignUpView();
         this.organizerSignUpView = new OrganizerSignUpView();
         this.mainPageView = new MainPageView();
+
+        this.userRepository = userRepository;
+        this.licenseRepository = licenseRepository;
+        this.accessRequestRepository = accessRequestRepository;
     }
 
-    /**
-     * Entry point for authentication flow from the Main Page.
-     */
     public void startAuthFlow(Scanner scanner) {
         mainPageView.displayLogo();
         mainPageView.displayText();
@@ -52,41 +66,71 @@ public class AuthController {
         }
     }
 
-    public boolean signIn(Scanner scanner) {
+    public User signIn(Scanner scanner) {
         System.out.println("\n--- Sign In ---");
         String email = signInView.enterEmail(scanner);
         String password = signInView.enterPassword(scanner);
 
-        if (validateCredentials(email, password)) {
-            System.out.println("\n[SUCCESS] Authentication successful! Welcome back, " + email + ".");
-            return true;
-        } else {
-            System.out.println("\n[ERROR] Invalid email or password.");
-            return false;
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            System.out.println("\n[ERROR] Account does not exist. Please sign up instead.");
+            return null;
         }
+
+        if (!user.getPassword().equals(password)) {
+            System.out.println("\n[ERROR] Invalid email or password.");
+            return null;
+        }
+
+        signInView.clickSignIn();
+        System.out.println("\n[SUCCESS] Authentication successful! Welcome back, " + user.getFullName() + ".");
+
+        if (user instanceof Racer) {
+            Racer racer = (Racer) user;
+            System.out.println("Category: " + racer.getCategory() + " | Podiums: " + racer.getCurrentPodiums());
+        }
+
+        return user;
     }
 
     public boolean signUpRacer(Scanner scanner) {
-        System.out.println("\n--- Racer Sign Up ---");
-        racerSignUpView.enterPersonalInfo(scanner);
-        racerSignUpView.enterCardInfo(scanner);
-        
-        System.out.println("\n[SUCCESS] Racer registration complete!");
+        String[] info = racerSignUpView.enterPersonalInfo(scanner);
+        String firstName = info[0];
+        String lastName = info[1];
+        String email = info[2];
+        String ssn = info[3];
+        String password = info[4];
+
+        racerSignUpView.enterCardInfo(scanner); // stubbed, out of scope for demo
+
+        Racer racer = new Racer(firstName, lastName, email, ssn, password);
+        int userId = userRepository.insertRacer(racer);
+
+        License license = new License(userId, LocalDate.now().plusYears(1), racer.getCategory());
+        licenseRepository.insert(license);
+
+        System.out.println("\n[SUCCESS] Racer registration complete! (user_id=" + userId + ")");
         racerSignUpView.displayRegistrationComplete();
         return true;
     }
 
     public boolean signUpOrganizer(Scanner scanner) {
-        System.out.println("\n--- Organizer Sign Up ---");
-        organizerSignUpView.enterPersonalInfo(scanner);
-        organizerSignUpView.clickSendAccessRequest();
-        
-        System.out.println("\n[SUCCESS] Organizer access request submitted for admin approval.");
-        return true;
-    }
+        String[] info = organizerSignUpView.enterPersonalInfo(scanner);
+        String firstName = info[0];
+        String lastName = info[1];
+        String email = info[2];
+        String ssn = info[3];
+        String password = info[4];
 
-    public boolean validateCredentials(String email, String password) {
-        // Demo credential check
-        return email != null && !email.isBlank() && password != null && !password.isBlank();
+        Organizer organizer = new Organizer(firstName, lastName, email, ssn, password);
+        int userId = userRepository.insertOrganizer(organizer);
+
+        AccessRequest request = new AccessRequest(userId); // defaults to PENDING
+        accessRequestRepository.insert(request);
+
+        organizerSignUpView.clickSendAccessRequest();
+        System.out.println("\n[SUCCESS] Organizer access request submitted for admin approval. (user_id=" + userId + ")");
+        return true;
     }
 }

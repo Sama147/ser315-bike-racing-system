@@ -9,7 +9,7 @@ public class OrganizerMainView {
 
     public void clickCreateRace() {
         // Stubbed feature.
-        System.out.println("Create race stubbed.");
+        System.out.println("Create race button simulated.");
     }
 
     public void clickSettings() {
