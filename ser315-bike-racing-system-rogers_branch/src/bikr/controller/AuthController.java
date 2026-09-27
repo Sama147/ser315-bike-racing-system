@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+package bikr.controller; public class AuthController { }
+=======
 package bikr.controller;
 
 import bikr.view.SignInView;
@@ -90,3 +93,4 @@ public class AuthController {
         return email != null && !email.isBlank() && password != null && !password.isBlank();
     }
 }
+>>>>>>> 9c1a770b4afad00ab8b522c108ab9db9aa65faa2

@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+package bikr.controller; public class AdminController { }
+=======
 package bikr.controller;
 
 import bikr.view.AdminMainView;
@@ -89,3 +92,4 @@ public class AdminController {
         System.out.println("Posting maintenance alert via AdminController...");
     }
 }
+>>>>>>> 9c1a770b4afad00ab8b522c108ab9db9aa65faa2

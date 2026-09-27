@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+package bikr.controller; public class ResultController { }
+=======
 package bikr.controller;
 
 import bikr.view.ResultView;
@@ -45,3 +48,4 @@ public class ResultController {
         System.out.println("\nRetrieving published race results via ResultController...");
     }
 }
+>>>>>>> 9c1a770b4afad00ab8b522c108ab9db9aa65faa2

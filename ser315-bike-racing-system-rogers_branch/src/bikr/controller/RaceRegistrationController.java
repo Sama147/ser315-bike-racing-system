@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+package bikr.controller; public class RaceRegistrationController { }
+=======
 package bikr.controller;
 
 import bikr.view.RaceRegistrationView;
@@ -52,3 +55,4 @@ public class RaceRegistrationController {
         return raceId != null && !raceId.isBlank();
     }
 }
+>>>>>>> 9c1a770b4afad00ab8b522c108ab9db9aa65faa2

@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+package bikr.controller; public class LicenseController { }
+=======
 package bikr.controller;
 
 public class LicenseController {
@@ -14,3 +17,4 @@ public class LicenseController {
         return true;
     }
 }
+>>>>>>> 9c1a770b4afad00ab8b522c108ab9db9aa65faa2

@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+package bikr.controller; public class RaceManagementController { }
+=======
 package bikr.controller;
 
 import bikr.view.OrganizerMainView;
@@ -56,3 +59,4 @@ public class RaceManagementController {
         System.out.println("Retrieving organized races via RaceManagementController...");
     }
 }
+>>>>>>> 9c1a770b4afad00ab8b522c108ab9db9aa65faa2
