@@ -7,10 +7,10 @@ public class ResultEntry {
     private int finishingPosition;
     private boolean podiumCounted;
 
-    //default cosntructor
+    //default constructor
     public ResultEntry() { }
 
-    //cosntructor
+    //constructor
     public ResultEntry(int resultId, int racerId, int finishingPosition) {
         this.resultId = resultId;
         this.racerId = racerId;

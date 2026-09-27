@@ -1,0 +1,444 @@
+--------------------------------------------------------------------
+  1. WHAT IS ALREADY DONE ON SAMA'S SIDE
+--------------------------------------------------------------------
+
+  - SQLite database (auto-created on first run, no installation needed)
+  - All models (User, Racer, Organizer, Administrator, Race,
+    Registration, AccessRequest, License, RaceResult, ResultEntry,
+    PaymentProfile, SystemSettings, Review)
+  - All enums (CategoryLevel, RaceType, RegistrationStatus,
+    RequestStatus, StarRating)
+  - All repositories (6 needed + 3 empty stubs)
+  - Builder pattern (RaceBuilder)
+  - Observer pattern (CategoryUpgradeService + 2 observers)
+  - Seed data: Ardass Sardas (admin), Christian Robins (organizer),
+    3 races
+
+  Do not edit any file inside:
+    src/bikr/model/
+    src/bikr/repository/
+    src/bikr/pattern/
+    src/bikr/config/
+    sql/
+
+--------------------------------------------------------------------
+  2. REPOSITORY METHODS — FULL REFERENCE
+--------------------------------------------------------------------
+  All repositories throw RuntimeException on DB failure.
+  No need for further error handling
+
+
+  USER REPOSITORY (UserRepository)
+  ------------------------------------------------------------------
+  int insertRacer(Racer r)
+      Inserts into users + racers tables. Returns new user_id.
+      Use for racer sign-up.
+
+  int insertOrganizer(Organizer o)
+      Inserts into users + organizers tables. Returns new user_id.
+      Use for organizer sign-up.
+
+  int insertAdministrator(Administrator a)
+      Same idea, for admin. You likely won't need this.
+
+  User findByEmail(String email)
+      Returns a Racer, Organizer, or Administrator depending on
+      the role column. Returns null if no match. Use for sign-in.
+
+  User findBySsn(String ssn)
+      Same but matches on SSN. Use for admin sign-in.
+
+  Racer findRacerById(int userId)
+      Returns a fully-loaded Racer (with currentPodiums + category).
+      Use in the results + upgrade flow.
+
+  void updateRacerCategory(int userId, CategoryLevel newCategory,
+                           int newPodiums)
+      Updates the racer's category and podium count. Called by the
+      upgrade service — you probably won't call it directly.
+
+
+  ACCESS REQUEST REPOSITORY (AccessRequestRepository)
+  ------------------------------------------------------------------
+  int insert(AccessRequest ar)
+      Creates a new PENDING request for an organizer.
+
+  List<AccessRequest> findPending()
+      Returns all requests with status PENDING.
+      Use in the admin approval queue.
+
+  void updateStatus(int requestId, RequestStatus status)
+      Marks a request as APPROVED or DECLINED.
+
+
+  RACE REPOSITORY (RaceRepository)
+  ------------------------------------------------------------------
+  int insert(Race race)
+      Inserts a race. Use in the (stubbed) create-race path.
+
+  List<Race> findAll()
+      Returns every race. Use for the race list menu.
+
+  Race findById(int raceId)
+      Single race by id.
+
+
+  REGISTRATION REPOSITORY (RegistrationRepository)
+  ------------------------------------------------------------------
+  int insert(Registration reg)
+      Registers a racer for a race.
+
+  int countByRace(int raceId)
+      Counts confirmed registrations. Use to display (x / y)
+      and to block full races.
+
+  List<Registration> findByRace(int raceId)
+      All registrations for a race. Use when posting results
+      (need the racer list).
+
+
+  RACE RESULT REPOSITORY (RaceResultRepository)
+  ------------------------------------------------------------------
+  int insertResult(RaceResult result)
+      Creates the race_results row (one per race/category).
+      Call once per posting.
+
+  int insertEntry(ResultEntry entry)
+      Creates one result_entries row per racer. Call in a loop.
+
+
+  LICENSE REPOSITORY (LicenseRepository)
+  ------------------------------------------------------------------
+  int insert(License l)
+      Creates a license row. Use during racer sign-up.
+
+  License findByUserId(int userId)
+      Returns the racer's current license.
+
+  void updateCategory(int userId, CategoryLevel newCat)
+      Updates the license category. Called by
+      LicenseCategoryObserver — you don't call it directly.
+
+
+  NOT IMPLEMENTED (leave alone):
+    PaymentProfileRepository
+    ReviewRepository
+    SystemSettingsRepository
+
+
+--------------------------------------------------------------------
+  3. PATTERN CLASSES — HOW TO USE THEM
+--------------------------------------------------------------------
+
+  BUILDER — RaceBuilder
+  ------------------------------------------------------------------
+  Chained setters, then build():
+
+      Race race = new RaceBuilder("Cairo Spring Race",
+                                  LocalDate.now().plusDays(30))
+          .setType(RaceType.ROAD)
+          .setOfficiality(true)
+          .setMiles(50.0)
+          .setRoute("Nile Loop")
+          .setLocation("Cairo")
+          .setMaxRegistrations(50)
+          .setLastDayRegistrations(LocalDate.now().plusDays(15))
+          .build();
+
+      race.setOrganizerId(organizerUserId);
+      raceRepository.insert(race);
+
+
+  OBSERVER — CategoryUpgradeService
+  ------------------------------------------------------------------
+  Setup ONCE in Main:
+
+      UserRepository userRepo = new UserRepository();
+      LicenseRepository licenseRepo = new LicenseRepository();
+
+      CategoryUpgradeService upgradeService =
+              new CategoryUpgradeService(userRepo);
+      upgradeService.attach(new RacerNotifyObserver());
+      upgradeService.attach(new LicenseCategoryObserver(licenseRepo));
+
+  Call AFTER posting results:
+
+      List<ResultEntry> entries = /* entries you just saved */;
+      upgradeService.processResult(entries);
+
+  That single call:
+    - Reads each racer
+    - Increments podium count if podiumCounted
+    - If podiums reach 5: promotes them, resets to 0,
+      fires BOTH observers
+
+  You do NOT call the observers yourself. The service does.
+
+
+--------------------------------------------------------------------
+  4. WIRING MAIN.JAVA
+--------------------------------------------------------------------
+
+  Main just wires everything and shows the top-level menu.
+  Skeleton:
+
+      package bikr;
+
+      import bikr.pattern.*;
+      import bikr.repository.*;
+      import bikr.controller.*;
+      import bikr.view.*;
+
+      import java.util.Scanner;
+
+      public class Main {
+          public static void main(String[] args) {
+
+              // 1. Repositories
+              UserRepository userRepo = new UserRepository();
+              RaceRepository raceRepo = new RaceRepository();
+              RegistrationRepository regRepo = new RegistrationRepository();
+              AccessRequestRepository reqRepo = new AccessRequestRepository();
+              RaceResultRepository resultRepo = new RaceResultRepository();
+              LicenseRepository licenseRepo = new LicenseRepository();
+
+              // 2. Observer wiring (once)
+              CategoryUpgradeService upgradeService =
+                      new CategoryUpgradeService(userRepo);
+              upgradeService.attach(new RacerNotifyObserver());
+              upgradeService.attach(new LicenseCategoryObserver(licenseRepo));
+
+              // 3. Controllers
+              AuthController auth = new AuthController(userRepo, licenseRepo);
+              RaceRegistrationController regCtrl =
+                      new RaceRegistrationController(raceRepo, regRepo, userRepo);
+              ResultController resultCtrl =
+                      new ResultController(raceRepo, regRepo, resultRepo,
+                                           userRepo, upgradeService);
+              AdminController adminCtrl =
+                      new AdminController(reqRepo, userRepo, licenseRepo,
+                                          upgradeService);
+
+              // 4. Views (create as needed)
+              MainPageView mainView = new MainPageView();
+
+              // 5. Top-level menu loop
+              Scanner sc = new Scanner(System.in);
+              boolean running = true;
+              while (running) {
+                  int choice = mainView.showMainMenu(sc);
+                  switch (choice) {
+                      case 1: auth.racerFlow(sc);         break;
+                      case 2: auth.organizerFlow(sc);     break;
+                      case 3: adminCtrl.adminFlow(sc);    break;
+                      case 0: running = false;            break;
+                      default: System.out.println("Invalid choice");
+                  }
+              }
+              System.out.println("Bye!");
+          }
+      }
+
+  NOTE: Constructor arguments depend on how your controllers are
+  structured. If yours already have different signatures, adjust the
+  wiring — that's the only part of Main that cares.
+
+
+--------------------------------------------------------------------
+  5. SCENARIOS TO IMPLEMENT (the CLI walkthrough)
+--------------------------------------------------------------------
+
+  SCENARIO 1 — Racer sign-up
+  ------------------------------------------------------------------
+  Input: first, last, email, ssn, password
+
+      Racer r = new Racer(first, last, email, ssn, password);
+      int id = userRepo.insertRacer(r);
+      License lic = new License(id, LocalDate.now().plusYears(1),
+                                r.getCategory());
+      licenseRepo.insert(lic);
+
+
+  SCENARIO 2 — Racer sign-in
+  ------------------------------------------------------------------
+  Input: email, password
+
+      User u = userRepo.findByEmail(email);
+      if (u == null)
+          -> "account does not exist, sign up instead"
+      else if (!u.getPassword().equals(pw))
+          -> "wrong credentials"
+      else
+          -> welcome + show racer menu
+
+
+  SCENARIO 3 — Register for a race (with seat count)
+  ------------------------------------------------------------------
+  Show race list:
+
+      List<Race> races = raceRepo.findAll();
+      for (Race r : races) {
+          int registered = regRepo.countByRace(r.getRaceId());
+          System.out.println(r.getRaceId() + " - " + r.getRaceName()
+              + " (" + registered + "/" + r.getRaceMaxRegistrations()
+              + ")");
+      }
+
+  After the user picks one:
+
+      if (regRepo.countByRace(raceId) >= race.getRaceMaxRegistrations()) {
+          System.out.println("can't register a fully registered race");
+      } else {
+          Registration reg = new Registration(
+                  racerId, raceId, racer.getCategory());
+          regRepo.insert(reg);
+          System.out.println("registered " + race.getRaceName()
+                  + " successfully");
+      }
+
+
+  SCENARIO 4 — Organizer sign-up
+  ------------------------------------------------------------------
+  Input: same fields as racer
+
+      Organizer o = new Organizer(first, last, email, ssn, password);
+      int id = userRepo.insertOrganizer(o);
+      reqRepo.insert(new AccessRequest(id));  // defaults to PENDING
+      System.out.println("access request to admin has been sent! "
+              + "wait for admin approval");
+
+
+  SCENARIO 5 — Admin approves organizers
+  ------------------------------------------------------------------
+  Input: admin SSN
+
+      User u = userRepo.findBySsn(ssn);
+      if (u instanceof Administrator) { show admin menu }
+
+  Show pending requests:
+
+      List<AccessRequest> pending = reqRepo.findPending();
+      for (AccessRequest ar : pending) {
+          User requester = userRepo.findRacerById(ar.getUserId());
+          // or look up name another way
+          System.out.print("Accept " + requester.getFullName()
+                  + ", yes or no? ");
+          String answer = sc.next();
+          reqRepo.updateStatus(ar.getRequestId(),
+              answer.equalsIgnoreCase("yes")
+                  ? RequestStatus.APPROVED
+                  : RequestStatus.DECLINED);
+      }
+
+
+  SCENARIO 6 — Organizer posts results
+  ------------------------------------------------------------------
+  Input: race choice, then a finishing rank per racer
+
+      List<Registration> regs = regRepo.findByRace(raceId);
+      RaceResult rr = new RaceResult(raceId, someCategory,
+                                     LocalDate.now());
+      int resultId = resultRepo.insertResult(rr);
+
+      List<ResultEntry> entries = new ArrayList<>();
+      for (Registration reg : regs) {
+          Racer r = userRepo.findRacerById(reg.getRacerId());
+          System.out.print(r.getFullName() + "'s rank: ");
+          int pos = sc.nextInt();
+
+          ResultEntry e = new ResultEntry(resultId, r.getUserId(), pos);
+          resultRepo.insertEntry(e);
+          entries.add(e);
+      }
+
+      // *** FIRE THE OBSERVERS ***
+      upgradeService.processResult(entries);
+      System.out.println("ranks saved and sent notifications to "
+              + "racers successfully!");
+
+
+  SCENARIO 7 — Category upgrade visible on next login
+  ------------------------------------------------------------------
+  Happens automatically. After Scenario 6, a racer with 5 podiums
+  is promoted. Next login, the new category is returned by:
+
+      Racer r = (Racer) userRepo.findByEmail(email);
+      System.out.println("Category: " + r.getCategory()
+              + " | Podiums: " + r.getCurrentPodiums());
+
+
+  SCENARIO 8 — Top-level menu loop
+  ------------------------------------------------------------------
+  Just the main dispatcher:
+      1 - Racer
+      2 - Organizer
+      3 - Admin
+      0 - Exit
+
+
+--------------------------------------------------------------------
+  6. SEED DATA — WHAT IS ALREADY IN THE DB
+--------------------------------------------------------------------
+
+  users (id=1): ADMIN     — Ardass Sardas
+                            ssn 999999999 / password admin123
+  users (id=2): ORGANIZER — Christian Robins
+                            ssn 111111111 / password pass
+
+  races (id=1): Grand Canyonic heated wheels
+                50 mi, ROAD, max 7 registrations
+  races (id=2): Seattle Crystal Twilight
+                40 mi, ROAD, max 8 registrations
+  races (id=3): Maunakai volcanic boom
+                30 mi, MOUNTAIN, max 8 registrations
+
+  access_requests (id=1): Christian Robins — APPROVED
+
+  Admin login for the demo: type 999999999 when asked for SSN.
+
+
+--------------------------------------------------------------------
+  7. RULES FOR THE MERGE
+--------------------------------------------------------------------
+
+  - NEVER edit anything in:
+        src/bikr/model/
+        src/bikr/repository/
+        src/bikr/pattern/
+        src/bikr/config/
+        sql/
+
+    Those are frozen. If you need a new method, ask Sama.
+
+  - YOUR files are:
+        src/bikr/view/
+        src/bikr/controller/
+        src/bikr/Main.java
+
+  - COMPILE before pushing. Ctrl+F9 in IntelliJ.
+    If it fails, do not push.
+
+  - ONE PR at a time. Small commits, clear messages.
+--------------------------------------------------------------------
+  8. COMMON ISSUES AND FIXES
+--------------------------------------------------------------------
+
+  Symptom:  "no such table: users"
+  Fix:      bikr.db corrupted or wrong working directory.
+            Delete bikr.db and re-run.
+            Set Working directory to $ProjectFileDir$ in Run Configs.
+
+  Symptom:  "ClassNotFoundException: org.sqlite.JDBC"
+  Fix:      SQLite jar not added to IntelliJ Libraries.
+
+  Symptom:  "Cannot resolve method insertRacer"
+  Fix:      Your controller doesn't have a UserRepository field.
+            Check constructor signature in Main.
+
+  Symptom:  Observer doesn't fire
+  Fix:      You forgot to call upgradeService.processResult(entries)
+            after saving entries.
+
+  Symptom:  Racer doesn't get promoted after 5 podiums
+  Fix:      ResultEntry.podiumCounted was false.
+            Check that finishing position is 1-3.

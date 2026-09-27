@@ -7,13 +7,16 @@ public class AccessRequest {
     private int userId;
     private RequestStatus status;
 
+    //default constructor
     public AccessRequest() { this.status = RequestStatus.PENDING; }
 
+    //constructor
     public AccessRequest(int userId) {
         this.userId = userId;
         this.status = RequestStatus.PENDING;
     }
 
+    //setters and getters
     public int getRequestId() { return requestId; }
     public void setRequestId(int requestId) { this.requestId = requestId; }
 

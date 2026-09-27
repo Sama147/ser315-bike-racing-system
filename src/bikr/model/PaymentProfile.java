@@ -6,14 +6,17 @@ public class PaymentProfile {
     private String cardNumber;
     private String cardExpiration;
 
+    //default constructor
     public PaymentProfile() { }
 
+    //constructor
     public PaymentProfile(int userId, String cardNumber, String cardExpiration) {
         this.userId = userId;
         this.cardNumber = cardNumber;
         this.cardExpiration = cardExpiration;
     }
 
+    //setters and getters
     public int getProfileId() { return profileId; }
     public void setProfileId(int profileId) { this.profileId = profileId; }
 

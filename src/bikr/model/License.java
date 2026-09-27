@@ -10,14 +10,17 @@ public class License {
     private LocalDate expirationDate;
     private CategoryLevel category;
 
+    //default constructor
     public License() { }
 
+    //constructor
     public License(int userId, LocalDate expirationDate, CategoryLevel category) {
         this.userId = userId;
         this.expirationDate = expirationDate;
         this.category = category;
     }
 
+    //setters and getters
     public int getLicenseId() { return licenseId; }
     public void setLicenseId(int licenseId) { this.licenseId = licenseId; }
 
