@@ -24,7 +24,7 @@ public class LicenseCategoryObserver implements UpgradeObserver {
     @Override
     public void update(Racer racer, CategoryLevel newCategory) {
         licenseRepository.updateCategory(racer.getUserId(), newCategory);
-        System.out.println(">>> License updated for " + racer.getFullName()
+        System.out.println("License updated for " + racer.getFullName()
                 + " to " + newCategory);
     }
 }
