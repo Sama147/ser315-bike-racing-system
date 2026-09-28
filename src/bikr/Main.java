@@ -49,7 +49,7 @@ public class Main {
 
 
         // 1) Create a racer and insert into the DB
-        System.out.println("\n[STEP 1] Creating a racer...");
+        System.out.println("\nstep 1: Creating a racer");
 
         // Unique email so re-running the test doesn't hit the UNIQUE constraint
         // on the users.email column. Without this, the second run would fail.
@@ -80,7 +80,7 @@ public class Main {
 
 
         // 2) — List races and register for one
-        System.out.println("\n[STEP 2] Available races:");
+        System.out.println("\nStep 2: Available races:");
 
         // findAll() executes: SELECT * FROM races ORDER BY race_id
         // Each row is reconstructed into a Race object via RaceBuilder (Builder pattern).
@@ -111,7 +111,7 @@ public class Main {
                 + race.getRaceMaxRegistrations());
 
         // 3) — Organizer posts results
-        System.out.println("\n[STEP 3] Organizer posting results...");
+        System.out.println("\nStep 3: Organizer posting results");
 
         // Create the parent result row for this race.
         // INSERT INTO race_results (race_id, category, posted_date) VALUES (...)
@@ -144,7 +144,7 @@ public class Main {
         //             -> LicenseCategoryObserver.update()  updates the DB
         //   4. Else: just save the new count
         // Our racer starts at 4 podiums, gets +1 → 5 → triggers the promotion.
-        System.out.println("\n[STEP 4] Processing results (firing observers)...");
+        System.out.println("\n4) Processing results (running observers)");
 
         List<ResultEntry> entries = new ArrayList<>();
         entries.add(entry);
@@ -152,19 +152,19 @@ public class Main {
 
         // 5)Verify the DB actually reflects all of the above
         // Re-fetch from the DB so we're reading persisted state, not in-memory.
-        System.out.println("\n[STEP 5] Verifying state...");
+        System.out.println("\n5) Verifying state");
         Racer updatedRacer = userRepo.findRacerById(racerId);
         License updatedLicense = licenseRepo.findByUserId(racerId);
 
         //category now CAT_4 (upgraded)
         //podiums back to 0 (reset after promotion)
         //license category also CAT_4 (observer updated it)
-        System.out.println("  Racer category:    " + updatedRacer.getCategory());
-        System.out.println("  Racer podiums:     " + updatedRacer.getCurrentPodiums()
+        System.out.println("Racer category: " + updatedRacer.getCategory());
+        System.out.println("Racer podiums: " + updatedRacer.getCurrentPodiums()
                 + "  (reset to 0 after upgrade)");
-        System.out.println("  License category:  " + updatedLicense.getCategory());
+        System.out.println("License category: " + updatedLicense.getCategory());
 
         //end of the demo
-        System.out.println("DEMO COMPLETE");
+        System.out.println("\nDEMO COMPLETE");
     }
 }
