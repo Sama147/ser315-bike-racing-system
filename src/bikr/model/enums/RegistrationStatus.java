@@ -1,4 +1,5 @@
 package bikr.model.enums;
+
 public enum RegistrationStatus {
-    CONFIRMED, WAITLISTED, CANCELLED
+    CONFIRMED, CANCELLED
 }

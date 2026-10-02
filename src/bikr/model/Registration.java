@@ -10,10 +10,8 @@ public class Registration {
     private RegistrationStatus status;
     private CategoryLevel category;
 
-    //default constructor
     public Registration() { }
 
-    //constructor
     public Registration(int racerId, int raceId, CategoryLevel category) {
         this.racerId = racerId;
         this.raceId = raceId;
@@ -21,7 +19,6 @@ public class Registration {
         this.status = RegistrationStatus.CONFIRMED;
     }
 
-    //setters and getters
     public int getRegistrationId() { return registrationId; }
     public void setRegistrationId(int registrationId) { this.registrationId = registrationId; }
 

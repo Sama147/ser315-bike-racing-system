@@ -1,18 +1,15 @@
 package bikr.model;
 
-public abstract class User
-{
+public abstract class User {
     private int userId;
     private String firstName;
     private String lastName;
     private String email;
-    private String password;
     private String ssn;
+    private String password;
 
-    //default constructor
-    public User() {}
+    public User() { }
 
-    //constructor
     public User(String firstName, String lastName, String email, String ssn, String password) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -21,7 +18,6 @@ public abstract class User
         this.password = password;
     }
 
-    //setters and getters
     public int getUserId() { return userId; }
     public void setUserId(int userId) { this.userId = userId; }
 
@@ -40,8 +36,5 @@ public abstract class User
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
-    // full name calling for account welcome message
-    public String getFullName() {
-        return firstName + " " + lastName;
-    }
+    public String getFullName() { return firstName + " " + lastName; }
 }

@@ -1,17 +1,9 @@
 package bikr.model;
+
 import bikr.model.enums.RaceType;
 import bikr.pattern.RaceBuilder;
-import java.time.LocalDate;
 
-/*
- * DESIGN PATTERN: Observer (observer interface)
- *
- * Contract for objects that want to be notified when a racer's
- * category is upgraded. The Subject (CategoryUpgradeService) holds
- * a list of these and calls update() on each when the event fires.
- *
- * Implementations: RacerNotifyObserver, LicenseCategoryObserver.
- */
+import java.time.LocalDate;
 
 public class Race {
     private int raceId;
@@ -26,7 +18,6 @@ public class Race {
     private int raceMaxRegistrations;
     private LocalDate raceLastDayRegistrations;
 
-    //constructor
     public Race(RaceBuilder builder) {
         this.raceName = builder.getRaceName();
         this.raceDate = builder.getRaceDate();
@@ -39,7 +30,6 @@ public class Race {
         this.raceLastDayRegistrations = builder.getRaceLastDayRegistrations();
     }
 
-    //setters and getters
     public int getRaceId() { return raceId; }
     public void setRaceId(int raceId) { this.raceId = raceId; }
 
@@ -71,5 +61,7 @@ public class Race {
     public void setRaceMaxRegistrations(int raceMaxRegistrations) { this.raceMaxRegistrations = raceMaxRegistrations; }
 
     public LocalDate getRaceLastDayRegistrations() { return raceLastDayRegistrations; }
-    public void setRaceLastDayRegistrations(LocalDate raceLastDayRegistrations) { this.raceLastDayRegistrations = raceLastDayRegistrations; }
+    public void setRaceLastDayRegistrations(LocalDate raceLastDayRegistrations) {
+        this.raceLastDayRegistrations = raceLastDayRegistrations;
+    }
 }
